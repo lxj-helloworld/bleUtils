@@ -15,21 +15,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/name_TV"
-            android:text="name">
+            android:text="name"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF">
         </TextView>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="3dp"
             android:id="@+id/mac_address_TV"
-            android:text="mac_address">
+            android:textSize="13dp"
+            android:text="mac_address"
+            android:textColor="#FCFCFC"
+            >
         </TextView>
     </LinearLayout>
-
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
         android:id="@+id/rssi_TV"
-        android:text="-90">
+        android:text="-0"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF">
     </TextView>
 </LinearLayout>

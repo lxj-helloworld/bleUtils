@@ -58,6 +58,8 @@ public class BleDeviceAdapter extends RecyclerView.Adapter implements View.OnCli
             myViewHolder.mac_address_TV.setText(myBluetoothDevice.getBluetoothDevice().getAddress());
             //信号强度
             myViewHolder.rssi_TV.setText(myBluetoothDevice.getRssi() + "");
+            Log.d(TAG,"myBluetoothDevice = " + myBluetoothDevice.toString());
+
         }
     }
 
