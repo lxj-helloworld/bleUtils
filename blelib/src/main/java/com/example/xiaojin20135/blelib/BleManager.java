@@ -396,7 +396,7 @@ public enum BleManager {
             Log.d(TAG,"len = " + len);
             //分帧个数
             int count =  (len / 18);
-            if(count%18 != 0){
+            if(len%18 != 0){
                 count = count + 1;
             }
             Log.d(TAG,"count = " + count + "  Math.ceil(len / 18) = " + Math.ceil(len / 18));
