@@ -375,7 +375,7 @@ public enum BleManager {
             sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
             Log.d(TAG,"sendData sendResult = " + sendResult);
         }else{
-           Log.d(TAG,"mWriteCharacteristic is null");
+           Log.d(TAG,"mWriteCharacteristic is null or datas is null.");
         }
         return sendResult;
     }
@@ -400,11 +400,12 @@ public enum BleManager {
                 count = count + 1;
             }
             Log.d(TAG,"count = " + count + "  Math.ceil(len / 18) = " + Math.ceil(len / 18));
-            //帧
-            byte[] frame = new byte[19];
+
             int sylen = len;
             int from = 0;
             for(int i=0;i<count;i++){
+                //帧
+                byte[] frame = new byte[19];
                 int length=0;
                 length=sylen;
                 if((sylen/(18+1))<1){

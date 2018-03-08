@@ -120,7 +120,9 @@ public enum DatasBuffer {
      * @return
      */
     public byte[] getFirstToSend(){
+        Log.d(TAG,"in getFirstToSend. frameToSend.size() = " + frameToSend.size());
         if(frameToSend.size() > 0){
+            Log.d(TAG,"frameToSend.get(0) = " + MethodsUtil.METHODS_UTIL.byteToHexString(frameToSend.get(0)));
             return frameToSend.get(0);
         }else{
             return null;
@@ -131,9 +133,11 @@ public enum DatasBuffer {
      * 清理当前已经发送的第一帧
      */
     public void clearFirstSended(){
+        Log.d(TAG,"in clearFirstSended . frameToSend.size() = " + frameToSend.size());
         if(frameToSend.size() > 0){
             frameToSend.remove(0);
         }
+        Log.d(TAG,"in clearFirstSended . frameToSend.size() = " + frameToSend.size());
     }
 
 
