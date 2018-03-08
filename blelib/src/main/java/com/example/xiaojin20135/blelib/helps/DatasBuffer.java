@@ -25,6 +25,8 @@ public enum DatasBuffer {
     private List<byte[]> frameBuffer = new ArrayList<>();
     //当前完整报文缓存
     private List<byte[]> frameBufferComplete = new ArrayList<>();
+    //当前需要发送的报文
+    private List<byte[]> frameToSend = new ArrayList<>();
 
     //收到报文后，需要通知的监听接口
     private FrameReceivedLis frameReceivedLis = null;
@@ -33,6 +35,7 @@ public enum DatasBuffer {
     DatasBuffer(){
         frameBuffer.clear();
         frameBufferComplete.clear();
+        frameToSend.clear();
     }
 
     /**
@@ -97,6 +100,43 @@ public enum DatasBuffer {
         }
     }
 
+    /**
+     * 清理当前需要发送的报文
+     */
+    public void clearToSend(){
+        frameToSend.clear();
+    }
+
+    /**
+     * 新增一帧需要发送的报文
+     * @param frame
+     */
+    public void addToSend(byte[] frame){
+        frameToSend.add(frame);
+    }
+
+    /**
+     * 获取当前需要发送的第一帧
+     * @return
+     */
+    public byte[] getFirstToSend(){
+        if(frameToSend.size() > 0){
+            return frameToSend.get(0);
+        }else{
+            return null;
+        }
+    }
+
+    /**
+     * 清理当前已经发送的第一帧
+     */
+    public void clearFirstSended(){
+        if(frameToSend.size() > 0){
+            frameToSend.remove(0);
+        }
+    }
+
+
     public List<byte[]> getFrameBuffer() {
         return frameBuffer;
     }
@@ -111,5 +151,13 @@ public enum DatasBuffer {
 
     public void setFrameReceivedLis(FrameReceivedLis frameReceivedLis) {
         this.frameReceivedLis = frameReceivedLis;
+    }
+
+    public List<byte[]> getFrameToSend() {
+        return frameToSend;
+    }
+
+    public void setFrameToSend(List<byte[]> frameToSend) {
+        this.frameToSend = frameToSend;
     }
 }

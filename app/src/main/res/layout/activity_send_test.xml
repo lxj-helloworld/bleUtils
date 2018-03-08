@@ -10,8 +10,27 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="sendMessage"
+        android:text="读取终端时钟，376.1"
         android:onClick="sendTest"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="打开通道"
+        android:onClick="openSignal"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="开始检测"
+        android:onClick="startWork"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="停止检测"
+        android:onClick="stopWork"/>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

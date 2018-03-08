@@ -33,7 +33,6 @@ public class SendTestActivity extends AppCompatActivity implements View.OnClickL
         initEvents();
     }
 
-
     private void initEvents(){
         frame_TV = (TextView)findViewById(R.id.frame_TV);
     }
@@ -58,6 +57,68 @@ public class SendTestActivity extends AppCompatActivity implements View.OnClickL
             }
         });
     }
+
+    /**
+     * 打开通道
+     * @param view
+     */
+    public void openSignal(View view){
+        byte[] datas = {(byte)0xAA,0x00,0x09,0x07,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x16};
+        BleManager.BLE_MANAGER.sendSliceData(datas);
+        DatasBuffer.DATAS_BUFFER.setFrameReceivedLis(new FrameReceivedLisImpl(){
+            @Override
+            public void receive(byte[] frame) {
+                super.receive(frame);
+                Log.d(TAG, "frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
+                Message message = new Message();
+                message.what = 1;
+                message.obj = MethodsUtil.METHODS_UTIL.byteToHexString(frame);
+                handler.sendMessage(message);
+            }
+        });
+    }
+
+    /**
+     * 开始检测
+     * @param view
+     */
+    public void startWork(View view){
+        byte[] datas = {(byte)0xAA,0x00,0x09,0x07,0x00,0x00,0x00,0x00,0x00,0x00,0x00,(byte)0x80,0x16};
+        BleManager.BLE_MANAGER.sendSliceData(datas);
+        DatasBuffer.DATAS_BUFFER.setFrameReceivedLis(new FrameReceivedLisImpl(){
+            @Override
+            public void receive(byte[] frame) {
+                super.receive(frame);
+                Log.d(TAG, "frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
+                Message message = new Message();
+                message.what = 1;
+                message.obj = MethodsUtil.METHODS_UTIL.byteToHexString(frame);
+                handler.sendMessage(message);
+            }
+        });
+    }
+
+    /**
+     * 停止检测
+     * @param view
+     */
+    public void stopWork(View view){
+        byte[] datas = {(byte)0xAA,0x00,0x09,0x07,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x16};
+        BleManager.BLE_MANAGER.sendSliceData(datas);
+        DatasBuffer.DATAS_BUFFER.setFrameReceivedLis(new FrameReceivedLisImpl(){
+            @Override
+            public void receive(byte[] frame) {
+                super.receive(frame);
+                Log.d(TAG, "frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
+                Message message = new Message();
+                message.what = 1;
+                message.obj = MethodsUtil.METHODS_UTIL.byteToHexString(frame);
+                handler.sendMessage(message);
+            }
+        });
+    }
+
+
 
     class FrameReceivedLisImpl implements FrameReceivedLis{
         @Override

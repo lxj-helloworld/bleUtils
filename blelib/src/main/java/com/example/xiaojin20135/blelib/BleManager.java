@@ -69,6 +69,8 @@ public enum BleManager {
     //连接成功后，通知activity
     private  Handler conChangeHandler;
 
+    private DatasBuffer datasBuffer;
+
 
     /**
      * 初始化特征字
@@ -85,7 +87,9 @@ public enum BleManager {
         UUID_CONFIRM = UUID.fromString(uuid_confirm);
         UUID_NOTIFICATION_DES2 = UUID.fromString(uuid_notification_des2);
         this.activity = activity;
+        datasBuffer = DatasBuffer.DATAS_BUFFER;
         initBle();
+
     }
 
     /**
@@ -236,7 +240,7 @@ public enum BleManager {
         }
         //Callback invoked when the list of remote services, characteristics and descriptors for the remote device have been updated, ie new services have been discovered.
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            Log.d(TAG," in onServicesDiscovered.");
+            Log.d(TAG," in onServicesDiscovered. status = " + status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 isServiceConnected = true;
                 boolean serviceFound;
@@ -245,10 +249,17 @@ public enum BleManager {
                     BluetoothGattService gattService = mBluetoothGatt.getService(UUID_SERVICE);
                     //得到写特征字
                     mWriteCharacteristic = gattService.getCharacteristic(UUID_WRITE);
+                    mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+                    Log.d(TAG,"mWriteCharacteristic  = " + mWriteCharacteristic);
+                    Log.d(TAG,"mWriteCharacteristic.getWriteType = " + mWriteCharacteristic.getWriteType());
                     //确认特征字
                     mConfirmCharacteristic = gattService.getCharacteristic(UUID_CONFIRM);
+                    mConfirmCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+                    Log.d(TAG,"mConfirmCharacteristic  = " + mConfirmCharacteristic);
+                    Log.d(TAG,"mConfirmCharacteristic.getWriteType = " + mConfirmCharacteristic.getWriteType());
                     //得到 通知 Characteristic
                     mNotificationCharacteristic = gattService.getCharacteristic(UUID_NOTIFICATION);
+                    Log.d(TAG,"mNotificationCharacteristic  = " + mNotificationCharacteristic);
                     boolean b = mBluetoothGatt.setCharacteristicNotification(mNotificationCharacteristic, true);
                     if(b){
                         List<BluetoothGattDescriptor> list = mNotificationCharacteristic.getDescriptors();
@@ -260,7 +271,7 @@ public enum BleManager {
                             Log.d(TAG,"setResult = " + setResult);
                             if(setResult){
                                 Log.d(TAG, "Enable 通知成功！");
-                                sendConfirm();
+
                             }else{
                                 Log.d(TAG, "Enable 通知失败");
                             }
@@ -270,7 +281,12 @@ public enum BleManager {
                     }else{
                         Log.d(TAG,"设置CharacteristicNotification失败，不处理");
                     }
+                }else {
+                    Log.d(TAG,"mBluetoothGatt = " + mBluetoothGatt + " isServiceConnected = " + isServiceConnected);
+
                 }
+            }else{
+                Log.d(TAG,"status != BluetoothGatt.GATT_SUCCESS");
             }
         }
         //Callback reporting the result of a characteristic read operation.
@@ -287,6 +303,7 @@ public enum BleManager {
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
             if(status == BluetoothGatt.GATT_SUCCESS){
+                sendConfirm();
                 Log.d(TAG, "onDescriptorWrite: " + "设置成功");
             }else{
                 Log.d(TAG, "onDescriptorWrite: " + "设置失败 status = " + status);
@@ -305,7 +322,11 @@ public enum BleManager {
             super.onCharacteristicWrite(gatt, characteristic, status);
             if(status == BluetoothGatt.GATT_SUCCESS){
                 Log.d(TAG, "onCharacteristicWrite: " + "发送成功");
+                //如果发送成功，移除当前发送成功的帧，并且发送下一帧
+                datasBuffer.clearFirstSended();
+                sendData(datasBuffer.getFirstToSend());
             }else{
+                //如果发送失败，
                 Log.d(TAG, "onCharacteristicWrite: " + "发送失败 status = " + status);
             }
         }
@@ -346,11 +367,13 @@ public enum BleManager {
     private boolean sendData(byte[] datas){
         Log.d(TAG, "in sendData. datas = " + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
         boolean sendResult = false;
-        if(mWriteCharacteristic != null){
+        Log.d(TAG,"mWriteCharacteristic = " + mWriteCharacteristic);
+        if(mWriteCharacteristic != null && datas != null){
             Log.d(TAG,"in sendData. datas.length = " + datas.length);
             mWriteCharacteristic.setValue(datas);
             mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
+            Log.d(TAG,"sendData sendResult = " + sendResult);
         }else{
            Log.d(TAG,"mWriteCharacteristic is null");
         }
@@ -363,7 +386,9 @@ public enum BleManager {
      * @return
      */
     public boolean sendSliceData(byte[] datas){
-        Log.d(TAG, "in sendData. datas = " + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+        Log.d(TAG, "in sendSliceData. datas = " + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+        //清理当前需要发送的数据
+        datasBuffer.clearToSend();
         boolean sendResult = false;
         if(mWriteCharacteristic != null){
             //本次报文长度
@@ -399,12 +424,15 @@ public enum BleManager {
                 }
                 from=from+18;
                 Log.d(TAG,"frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
-                mWriteCharacteristic.setValue(frame);
-                mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-                sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
+                datasBuffer.addToSend(frame);
             }
         }else{
             Log.d(TAG,"mWriteCharacteristic is null");
+        }
+        //如果待发送报文数量大于0，开始发送
+        if(datasBuffer.getFrameToSend().size() > 0){
+            Log.d(TAG,"发送第一帧");
+            sendData(datasBuffer.getFirstToSend());
         }
         return sendResult;
     }
@@ -446,6 +474,9 @@ public enum BleManager {
             mConfirmCharacteristic.setValue(datas);
             mConfirmCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             sendResult = mBluetoothGatt.writeCharacteristic(mConfirmCharacteristic);
+            Log.d(TAG,"sendConfirm sendResult = " + sendResult);
+        }else{
+            Log.d(TAG,"mConfirmCharacteristic is null");
         }
         return sendResult;
     }
