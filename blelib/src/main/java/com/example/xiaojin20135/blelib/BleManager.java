@@ -26,6 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static com.example.xiaojin20135.blelib.helps.BleConstant.SCANNEWDEVICE;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.STARTCONNECT;
+
 /**
  * Created by xiaojin20135 on 2018-02-28.
  */
@@ -63,11 +66,7 @@ public enum BleManager {
     //当前扫描到的设备列表 ,设备加信号强度
     private List<MyBluetoothDevice> deviceList = new ArrayList<>();
     //新发现设备通知
-    private Handler newDiviceHandler;
-    //发现新设备what值
-    public static final int SCANNEWDEVICE = 1;
-    //连接成功后，通知activity
-    private  Handler conChangeHandler;
+    private Handler bleHandler;
 
     private DatasBuffer datasBuffer;
 
@@ -158,7 +157,7 @@ public enum BleManager {
                 //添加到设备列表
                 MyBluetoothDevice myBluetoothDevice = new MyBluetoothDevice(device,rssi);
                 deviceList.add(myBluetoothDevice);
-                newDevicFound();
+                sendStateChange(SCANNEWDEVICE,"");
             }else{
                 Log.d(TAG,"扫描设备名称获取失败，未识别的设备。");
             }
@@ -181,6 +180,8 @@ public enum BleManager {
                 mBluetoothGatt = null;
             }else{
             }
+            //发送开始连接通知
+            sendStateChange(STARTCONNECT,"");
             //连接到GATT server
             mBluetoothGatt = mDevice.connectGatt(activity, false, mGattCallback);
         }else{
@@ -204,7 +205,7 @@ public enum BleManager {
             Log.d(TAG," in onConnectionStateChange. status = " + status);
             super.onConnectionStateChange(gatt, status, newState);
             Log.d(TAG, "连接状态发生变化: " + newState);
-            sendStateChange(newState);
+            sendStateChange(newState,"");
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 String err = "连接失败：" + status;
                 gatt.close();
@@ -217,9 +218,11 @@ public enum BleManager {
                     mBluetoothGatt = mDevice.connectGatt(activity, false, mGattCallback);
                 }
                 Log.d(TAG, err);
+                sendStateChange(newState,"err");
                 return;
             }
             if(newState == 0){
+                sendStateChange(newState,"err");
                 Log.d(TAG,"蓝牙断开");
             }
             //已连接 当蓝牙设备已经连接 获取ble设备上面的服务
@@ -452,13 +455,13 @@ public enum BleManager {
     private void receiveManage(byte[] receiveArr){
         Log.d(TAG,"receiveArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(receiveArr));
         byte firstData = (byte)(receiveArr[0]);
-        Log.d(TAG,"firstData = " + Integer.toHexString(firstData));
+        Log.d(TAG,"firstData = " + Integer.toHexString(firstData & 0xFF));
         if((firstData & 0xFF) == 0xFF){ //蓝牙设备发来的加密串，
             Log.d(TAG,"加密认证中");
             sendEncrypt(receiveArr);
         }else if((firstData & 0xFF)== 0xFE){ //加密认证过程完成
             Log.d(TAG,"加密认证过程完成");
-            sendStateChange(BleConstant.CONNECTDONE);
+            sendStateChange(BleConstant.CONNECTDONE,"");
         }else{
             DatasBuffer.DATAS_BUFFER.addFrame(receiveArr);
         }
@@ -504,27 +507,9 @@ public enum BleManager {
         return sendData(encryptResult);
     }
 
-    /**
-     * 设置扫描到新设备后的通知对象
-     * @param handler
-     */
-    public void setNewDiviceHandler(Handler handler){
-        this.newDiviceHandler = handler;
-    }
 
-    /**
-     * 发现新设备
-     */
-    private void newDevicFound(){
-        if(newDiviceHandler != null){
-            Message message = new Message();
-            message.what = SCANNEWDEVICE;
-            message.obj = "";
-            newDiviceHandler.sendMessage(message);
-        }else{
-            Log.d(TAG,"handler is null ");
-        }
-    }
+
+
     /**
      * 返回当前已经扫描到的设备的列表
      * @return
@@ -541,21 +526,30 @@ public enum BleManager {
         this.mDevice = mDevice;
     }
 
-    public Handler getConChangeHandler() {
-        return conChangeHandler;
+    public Handler getBleHandler() {
+        return bleHandler;
     }
 
-    public void setConChangeHandler(Handler conChangeHandler) {
-        this.conChangeHandler = conChangeHandler;
+    public void setBleHandler(Handler bleHandler) {
+        this.bleHandler = bleHandler;
     }
 
-    public void sendStateChange(int state){
-        if(conChangeHandler != null){
+    /**
+     * 蓝牙动作，扫描新设备、开始连接、连接状态变化
+     * @param state
+     */
+    public void sendStateChange(int state,String obj){
+        Log.d(TAG,"sendStateChange. state = " + state);
+        if(bleHandler != null){
             Message message = new Message();
             message.what = state;
-            message.obj = "";
-            conChangeHandler.sendMessage(message);
+            message.obj = obj;
+            bleHandler.sendMessage(message);
+        }else{
+            Log.d(TAG,"handler is null.");
+
         }
     }
+
 
 }

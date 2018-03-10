@@ -78,7 +78,7 @@ public class ScanListActivity extends AppCompatActivity {
             public void handleMessage(Message msg) {
                 Log.d(TAG, "msg.what = " + msg.what);
                 super.handleMessage(msg);
-                if(msg.what == BleManager.SCANNEWDEVICE){//发现新设备
+                if(msg.what == BleConstant.SCANNEWDEVICE){//发现新设备
                     datas = bleManager.getDevicesList();
                     Log.d(TAG,"deviceList = " + datas.toString());
                     MyBluetoothDevice myBluetoothDevice = datas.get(datas.size()-1);
@@ -86,16 +86,9 @@ public class ScanListActivity extends AppCompatActivity {
                     bleDeviceAdapter.clearAll();
                     bleDeviceAdapter.addDatas(datas);
                     bleDeviceAdapter.notifyDataSetChanged();
-                }
-            }
-        };
-        bleManager.setNewDiviceHandler(handler);
-        //连接状态发生变化通知
-        conChangeHandler = new Handler(){
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                if(msg.what == BleConstant.CONNECTED){
+                }else if(msg.what == BleConstant.STARTCONNECT){
+                    Log.d(TAG,"开始连接");
+                }else if(msg.what == BleConstant.CONNECTED){
                     Log.d(TAG,"连接成功！");
                 }else if(msg.what == BleConstant.CONNECTDONE){
                     Log.d(TAG,"认证完成，可跳转");
@@ -106,6 +99,7 @@ public class ScanListActivity extends AppCompatActivity {
                 }
             }
         };
-        bleManager.setConChangeHandler(conChangeHandler);
+        bleManager.setBleHandler(handler);
+
     }
 }

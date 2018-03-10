@@ -17,4 +17,9 @@ public enum BleConstant {
     public static final int CONNECTED= 2; //连接成功
     public static final int DISCONNECTING = 3; //正在断开
     public static final int CONNECTDONE = 4;//连接后加密认证完成，可跳转
+
+    //发现新设备what值
+    public static final int SCANNEWDEVICE = 10;
+    //开始连接
+    public static final int STARTCONNECT = 11;
 }

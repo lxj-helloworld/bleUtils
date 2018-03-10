@@ -45,13 +45,14 @@ public enum DatasBuffer {
     public void addFrame(byte[] frame){
         //获取第一个字节，判断是新报文的开头还是一个报文的结束
         byte firstByte = frame[0];
+        Log.d(TAG,"firstByte & 0xFF = " + Integer.toHexString(firstByte & 0xFF));
         //如果是一个报文的第一帧，清空当前缓冲区数据
         if((firstByte & 0xFF) == 0x00){
             frameBuffer.clear();
         }
         frameBuffer.add(frame);
         //判断第一个字节是否是结束帧，如果是，组织一个完整的报文
-        if((firstByte & 0xFF & 0x80) == 0x80){
+        if(((firstByte & 0xFF) & 0x80) == 0x80){
             makeACompleteFrame();
         }
     }
@@ -59,41 +60,70 @@ public enum DatasBuffer {
      * 返回一帧完整的报文
      */
     public void makeACompleteFrame(){
+        Log.d(TAG,"组织完整报文 frameBuffer.size() = " + frameBuffer.size());
         //遍历当前缓冲区，判断处于第一个位置的报文的第一个字节是否是帧头
         for(int i=0;i<frameBuffer.size();i++){
             byte firstByte = frameBuffer.get(i)[0];
-            if((firstByte & 0xFF) == 0x00){ //如果是帧头，退出循环
+            Log.d(TAG, "firstByte = " + Integer.toHexString(firstByte&0xFF));
+            if((firstByte & 0x7F) == 0x00){ //如果是帧头，退出循环
+                Log.d(TAG,"是帧头，退出循环");
                 break;
             }else{
+                Log.d(TAG,"不是帧头，移除第一帧");
                 frameBuffer.remove(0);
                 i = i - 1;
             }
         }
+        Log.d(TAG,"frameBuffer.size() = " + frameBuffer.size());
         if(frameBuffer.size() == 0){
             return;
         }
         //计算报文长度
         byte[] firstFrame = frameBuffer.get(0);
         //当前按照376.1协议计算长度
-        int lenbyte = ((firstFrame[2] & 0xFF) >> 2) + ((firstFrame[3] & 0xFF) << 6) + 8;
+        int lenbyte = (firstFrame[3] & 0xFF)  + 4;
         Log.d(TAG,"lenbyte = " + lenbyte);
         byte[] frameComplete = new byte[lenbyte];
         int index = 0;
-        for(int i=0;i<frameBuffer.size();i++){
-            byte[] currentFrame = frameBuffer.get(i);
-            if(i != (frameBuffer.size()-1)){
-                for(int j=1;j<19;j++){
+        int circle = (lenbyte / 18);//本次组帧循环次数，根据本次报文长度计算
+        if((lenbyte % 18) != 0){
+            circle = circle + 1;
+        }
+        if(circle > frameBuffer.size()){
+            Log.d(TAG,"帧丢失");
+            return ;
+        }
+        Log.d(TAG,"circle = " + circle);
+        //剩余字节数
+        int leftLen = lenbyte;
+        for(index=0;index<circle;index++){
+            leftLen = lenbyte - (18 * index);
+            Log.d(TAG,"剩余字节数 leftLen = " + leftLen);
+            byte[] currentFrame = frameBuffer.get(index);
+            Log.d(TAG,"currentFrame = " + MethodsUtil.METHODS_UTIL.byteToHexString(currentFrame));
+            if(index != (frameBuffer.size()-1)){
+                for(int j=1;(j<19 && j<leftLen);j++){
+                    Log.d(TAG,"index*18 + (j-1) = " + (index*18 + (j-1)));
+                    Log.d(TAG,"currentFrame["+j+"] = " + Integer.toHexString(currentFrame[j]&0xFF));
                     //i*8 ，当前帧相对于前面帧的偏移量；（j-1）为当前帧内字节偏移量
-                    frameComplete[i*18 + (j-1)] = currentFrame[j];
+                    frameComplete[index*18 + (j-1)] = currentFrame[j];
                 }
             }else{
                 //最后一帧内剩余的字节数
-                int leftBytes = lenbyte - (18 * i);
-                for(int j=1;j<=leftBytes;j++){
-                    frameComplete[i*18 + (j-1)] = currentFrame[j];
+                for(int j=1;j<=leftLen;j++){
+                    frameComplete[index*18 + (j-1)] = currentFrame[j];
+
+                    Log.d(TAG,"1  index*18 + (j-1) = " + (index*18 + (j-1)));
+                    Log.d(TAG,"1  currentFrame["+j+"] = " + currentFrame[j]);
                 }
             }
         }
+        //移除前circle个分钟呢
+        for(int i=0;i<circle;i++){
+            frameBuffer.remove(i);
+            index--;
+        }
+        Log.d(TAG,"index = " + index + " frameBuffer.size() = " + frameBuffer.size());
         Log.d(TAG,"frameComplete = " + MethodsUtil.METHODS_UTIL.byteToHexString(frameComplete));
         if(frameReceivedLis != null){
             frameReceivedLis.receive(frameComplete);

@@ -10,6 +10,7 @@ import android.view.View;
 
 import com.example.xiaojin20135.blelib.BleManager;
 import com.example.xiaojin20135.blelib.bean.MyBluetoothDevice;
+import com.example.xiaojin20135.blelib.helps.BleConstant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity{
             public void handleMessage(Message msg) {
                 Log.d(TAG,"msg.what = " + msg.what);
                 super.handleMessage(msg);
-                if(msg.what == BleManager.SCANNEWDEVICE){//发现新设备
+                if(msg.what == BleConstant.SCANNEWDEVICE){//发现新设备
                     deviceList = bleManager.getDevicesList();
                     Log.d(TAG,"deviceList = " + deviceList.toString());
                     MyBluetoothDevice myBluetoothDevice = deviceList.get(deviceList.size()-1);
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity{
                 }
             }
         };
-        bleManager.setNewDiviceHandler(handler);
+        bleManager.setBleHandler(handler);
     }
 
     public void startScan(View view) {
