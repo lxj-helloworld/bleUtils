@@ -402,7 +402,7 @@ public enum BleManager {
             if(len%18 != 0){
                 count = count + 1;
             }
-            Log.d(TAG,"count = " + count + "  Math.ceil(len / 18) = " + Math.ceil(len / 18));
+//            Log.d(TAG,"count = " + count + "  Math.ceil(len / 18) = " + Math.ceil(len / 18));
 
             int sylen = len;
             int from = 0;
@@ -420,14 +420,14 @@ public enum BleManager {
                 }
                 for(int k=0;k<18;k++){
                     if(k<length){
-                        Log.d(TAG,"k+1 = " + (k+1) + " ; (from + k) = " + (from + k));
+//                        Log.d(TAG,"k+1 = " + (k+1) + " ; (from + k) = " + (from + k));
                         frame[k+1]=datas[from+k];
                     }else{
                         frame[k+1]=0;
                     }
                 }
                 from=from+18;
-                Log.d(TAG,"frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
+//                Log.d(TAG,"frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
                 datasBuffer.addToSend(frame);
             }
         }else{

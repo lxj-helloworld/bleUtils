@@ -59,7 +59,7 @@ public enum DatasBuffer {
     /**
      * 返回一帧完整的报文
      */
-    public void makeACompleteFrame(){
+    public synchronized void  makeACompleteFrame(){
         Log.d(TAG,"组织完整报文 frameBuffer.size() = " + frameBuffer.size());
         //遍历当前缓冲区，判断处于第一个位置的报文的第一个字节是否是帧头
         for(int i=0;i<frameBuffer.size();i++){
