@@ -60,11 +60,11 @@ public enum DatasBuffer {
      * 返回一帧完整的报文
      */
     public synchronized void  makeACompleteFrame(){
-        Log.d(TAG,"组织完整报文 frameBuffer.size() = " + frameBuffer.size());
+//        Log.d(TAG,"组织完整报文 frameBuffer.size() = " + frameBuffer.size());
         //遍历当前缓冲区，判断处于第一个位置的报文的第一个字节是否是帧头
         for(int i=0;i<frameBuffer.size();i++){
             byte firstByte = frameBuffer.get(i)[0];
-            Log.d(TAG, "firstByte = " + Integer.toHexString(firstByte&0xFF));
+//            Log.d(TAG, "firstByte = " + Integer.toHexString(firstByte&0xFF));
             if((firstByte & 0x7F) == 0x00){ //如果是帧头，退出循环
                 Log.d(TAG,"是帧头，退出循环");
                 break;
@@ -74,7 +74,7 @@ public enum DatasBuffer {
                 i = i - 1;
             }
         }
-        Log.d(TAG,"frameBuffer.size() = " + frameBuffer.size());
+//        Log.d(TAG,"frameBuffer.size() = " + frameBuffer.size());
         if(frameBuffer.size() == 0){
             return;
         }
@@ -93,18 +93,18 @@ public enum DatasBuffer {
             Log.d(TAG,"帧丢失");
             return ;
         }
-        Log.d(TAG,"circle = " + circle);
+//        Log.d(TAG,"circle = " + circle);
         //剩余字节数
         int leftLen = lenbyte;
         for(index=0;index<circle;index++){
             leftLen = lenbyte - (18 * index);
-            Log.d(TAG,"剩余字节数 leftLen = " + leftLen);
+//            Log.d(TAG,"剩余字节数 leftLen = " + leftLen);
             byte[] currentFrame = frameBuffer.get(index);
             Log.d(TAG,"currentFrame = " + MethodsUtil.METHODS_UTIL.byteToHexString(currentFrame));
             if(index != (frameBuffer.size()-1)){
                 for(int j=1;(j<19 && j<leftLen);j++){
-                    Log.d(TAG,"index*18 + (j-1) = " + (index*18 + (j-1)));
-                    Log.d(TAG,"currentFrame["+j+"] = " + Integer.toHexString(currentFrame[j]&0xFF));
+//                    Log.d(TAG,"index*18 + (j-1) = " + (index*18 + (j-1)));
+//                    Log.d(TAG,"currentFrame["+j+"] = " + Integer.toHexString(currentFrame[j]&0xFF));
                     //i*8 ，当前帧相对于前面帧的偏移量；（j-1）为当前帧内字节偏移量
                     frameComplete[index*18 + (j-1)] = currentFrame[j];
                 }
@@ -113,8 +113,8 @@ public enum DatasBuffer {
                 for(int j=1;j<=leftLen;j++){
                     frameComplete[index*18 + (j-1)] = currentFrame[j];
 
-                    Log.d(TAG,"1  index*18 + (j-1) = " + (index*18 + (j-1)));
-                    Log.d(TAG,"1  currentFrame["+j+"] = " + currentFrame[j]);
+//                    Log.d(TAG,"1  index*18 + (j-1) = " + (index*18 + (j-1)));
+//                    Log.d(TAG,"1  currentFrame["+j+"] = " + currentFrame[j]);
                 }
             }
         }
@@ -123,7 +123,7 @@ public enum DatasBuffer {
             frameBuffer.remove(i);
             index--;
         }
-        Log.d(TAG,"index = " + index + " frameBuffer.size() = " + frameBuffer.size());
+//        Log.d(TAG,"index = " + index + " frameBuffer.size() = " + frameBuffer.size());
         Log.d(TAG,"frameComplete = " + MethodsUtil.METHODS_UTIL.byteToHexString(frameComplete));
         if(frameReceivedLis != null){
             frameReceivedLis.receive(frameComplete);
