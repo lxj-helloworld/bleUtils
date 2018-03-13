@@ -324,7 +324,7 @@ public enum BleManager {
             Log.d(TAG," in onCharacteristicWrite.发送数据到蓝牙设备。");
             super.onCharacteristicWrite(gatt, characteristic, status);
             if(status == BluetoothGatt.GATT_SUCCESS){
-                Log.d(TAG, "onCharacteristicWrite: " + "发送成功");
+                Log.d(TAG, "onCharacteristicWrite: " + "发送成功: " + " " + MethodsUtil.METHODS_UTIL.byteToHexString(characteristic.getValue()));
                 //如果发送成功，移除当前发送成功的帧，并且发送下一帧
                 datasBuffer.clearFirstSended();
                 sendData(datasBuffer.getFirstToSend());
@@ -376,17 +376,8 @@ public enum BleManager {
             mWriteCharacteristic.setValue(datas);
             mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
-            Log.d(TAG,"sendData sendResult = " + sendResult);
             if(!sendResult){
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.d(TAG,"发送失败，重发");
-                        mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
-                    }
-                },50);
-            }else{
-                Log.d(TAG,"发送成功");
+                mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
             }
         }else{
            Log.d(TAG,"mWriteCharacteristic is null or datas is null.");
