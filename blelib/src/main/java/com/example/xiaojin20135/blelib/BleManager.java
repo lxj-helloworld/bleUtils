@@ -393,6 +393,14 @@ public enum BleManager {
     }
 
     /**
+     * 发送失败， 重试
+     * @return
+     */
+    private boolean sendTry(){
+        return sendData(currentFrame);
+    }
+
+    /**
      * 分帧发送
      * @param datas
      * @return

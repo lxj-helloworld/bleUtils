@@ -1,5 +1,4 @@
 package com.example.xiaojin20135.blelib.helps;
-
 /**
  * Created by xiaojin20135 on 2018-03-01.
  *              * @param newState 连接状态：
@@ -7,9 +6,7 @@ package com.example.xiaojin20135.blelib.helps;
  *                 1：in connecting state
  *                 2：in connected state
  *                 3：in disconnecting state
-
  */
-
 public enum BleConstant {
     BLE_CONSTANT;
     public static final int DISCONNECTED = 0; //连接断开
