@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.example.xiaojin20135.blelib.BleManager;
 import com.example.xiaojin20135.blelib.FrameReceivedLis;
+import com.example.xiaojin20135.blelib.helps.BleConstant;
 import com.example.xiaojin20135.blelib.helps.DatasBuffer;
 import com.example.xiaojin20135.blelib.helps.MethodsUtil;
 
@@ -22,6 +23,10 @@ public class SendTestActivity extends AppCompatActivity implements View.OnClickL
             super.handleMessage(msg);
             if(msg.what == 1){
                 frame_TV.setText(frame_TV.getText() + msg.obj.toString() +"\r\t");
+//                send();
+            }else if(msg.what == BleConstant.SENDFAILED_TRY){
+                Log.d(TAG,"发送失败，重试");
+                BleManager.BLE_MANAGER.sendTry();
             }
         }
     };
@@ -31,6 +36,7 @@ public class SendTestActivity extends AppCompatActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send_test);
         initEvents();
+        BleManager.BLE_MANAGER.setSendHandler(handler);
     }
 
     private void initEvents(){
@@ -43,6 +49,11 @@ public class SendTestActivity extends AppCompatActivity implements View.OnClickL
     }
 
     public void sendTest(View v){
+        send();
+    }
+
+
+    private void send(){
         byte[] datas = {(byte)0x68,(byte)0x4a,(byte)0x00,(byte)0x4a,(byte)0x00,(byte)0x68,(byte)0x5b,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0x04,(byte)0x0c,(byte)0xe4,(byte)0x00,(byte)0x00,(byte)0x02,(byte)0x00,(byte)0x04,(byte)0x49,(byte)0x22,(byte)0x11,(byte)0x22,(byte)0x00,(byte)0xef,(byte)0x16};
         BleManager.BLE_MANAGER.sendSliceData(datas);
         DatasBuffer.DATAS_BUFFER.setFrameReceivedLis(new FrameReceivedLisImpl(){

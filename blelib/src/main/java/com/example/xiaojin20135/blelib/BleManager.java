@@ -74,6 +74,9 @@ public enum BleManager {
 
     private DatasBuffer datasBuffer;
 
+    //标示是否发送成功，如果发送成功，收到成功回调之后，继续发送下一帧，如果处于发送失败状态，即使收到成功回调也不发送下一帧
+    public static boolean sendSuccess = false;
+
 
     /**
      * 初始化特征字
@@ -325,14 +328,13 @@ public enum BleManager {
         //Callback indicating the result of a descriptor write operation.
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            Log.d(TAG," in onCharacteristicWrite.发送数据到蓝牙设备。");
+//            Log.d(TAG," in onCharacteristicWrite.发送数据到蓝牙设备。");
             super.onCharacteristicWrite(gatt, characteristic, status);
-            if(status == BluetoothGatt.GATT_SUCCESS){
+            if(status == BluetoothGatt.GATT_SUCCESS && sendSuccess){
                 Log.d(TAG, "onCharacteristicWrite: " + "发送成功: " + " " + MethodsUtil.METHODS_UTIL.byteToHexString(characteristic.getValue()));
                 //如果发送成功，移除当前发送成功的帧，并且发送下一帧
                 datasBuffer.clearFirstSended();
-                boolean sendOk = sendData(datasBuffer.getFirstToSend());
-
+                sendData(datasBuffer.getFirstToSend());
             }else{
                 //如果发送失败，
                 Log.d(TAG, "onCharacteristicWrite: " + "发送失败 status = " + status);
@@ -341,7 +343,7 @@ public enum BleManager {
         //Callback triggered as a result of a remote characteristic notification.
         @Override
         public final void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-            Log.d(TAG,"on onCharacteristicChanged. 收到蓝牙设备发来的数据。");
+//            Log.d(TAG,"on onCharacteristicChanged. 收到蓝牙设备发来的数据。");
             byte[] value = characteristic.getValue();
             if(value != null){
                 receiveManage(value);
@@ -373,16 +375,17 @@ public enum BleManager {
      * @param datas
      */
     private boolean sendData(byte[] datas){
-        Log.d(TAG, "in sendData. datas = " + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
         currentFrame = datas;
         boolean sendResult = false;
-        Log.d(TAG,"mWriteCharacteristic = " + mWriteCharacteristic);
         if(mWriteCharacteristic != null && datas != null){
-            Log.d(TAG,"in sendData. datas.length = " + datas.length);
             mWriteCharacteristic.setValue(datas);
             mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
-            if(!sendResult){
+            sendSuccess  = sendResult;
+            if(sendResult){
+                Log.d(TAG,"in sendData . 发送成功:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+            }else{
+                Log.d(TAG,"in sendData . 发送失败:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
                 //发送失败，重新发送
                 sendHandlerStatus(SENDFAILED_TRY,"");
             }
@@ -396,7 +399,8 @@ public enum BleManager {
      * 发送失败， 重试
      * @return
      */
-    private boolean sendTry(){
+    public boolean sendTry(){
+        Log.d(TAG,"sendTry 发送失败，重新发送:" + MethodsUtil.METHODS_UTIL.byteToHexString(currentFrame));
         return sendData(currentFrame);
     }
 
@@ -420,7 +424,6 @@ public enum BleManager {
                 count = count + 1;
             }
 //            Log.d(TAG,"count = " + count + "  Math.ceil(len / 18) = " + Math.ceil(len / 18));
-
             int sylen = len;
             int from = 0;
             for(int i=0;i<count;i++){
@@ -452,8 +455,9 @@ public enum BleManager {
         }
         //如果待发送报文数量大于0，开始发送
         if(datasBuffer.getFrameToSend().size() > 0){
-            Log.d(TAG,"发送第一帧");
+//            Log.d(TAG,"发送第一帧");
             sendResult = sendData(datasBuffer.getFirstToSend());
+            Log.d(TAG,"in sendSliceData, sendResult = " + sendResult);
         }
         return sendResult;
     }
@@ -472,7 +476,7 @@ public enum BleManager {
     private void receiveManage(byte[] receiveArr){
         Log.d(TAG,"receiveArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(receiveArr));
         byte firstData = (byte)(receiveArr[0]);
-        Log.d(TAG,"firstData = " + Integer.toHexString(firstData & 0xFF));
+//        Log.d(TAG,"firstData = " + Integer.toHexString(firstData & 0xFF));
         if((firstData & 0xFF) == 0xFF){ //蓝牙设备发来的加密串，
             Log.d(TAG,"加密认证中");
             sendEncrypt(receiveArr);
@@ -585,5 +589,11 @@ public enum BleManager {
         }
     }
 
+    public Handler getSendHandler() {
+        return sendHandler;
+    }
 
+    public void setSendHandler(Handler sendHandler) {
+        this.sendHandler = sendHandler;
+    }
 }

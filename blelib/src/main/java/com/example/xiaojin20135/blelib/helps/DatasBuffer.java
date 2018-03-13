@@ -45,7 +45,7 @@ public enum DatasBuffer {
     public void addFrame(byte[] frame){
         //获取第一个字节，判断是新报文的开头还是一个报文的结束
         byte firstByte = frame[0];
-        Log.d(TAG,"firstByte & 0xFF = " + Integer.toHexString(firstByte & 0xFF));
+//        Log.d(TAG,"firstByte & 0xFF = " + Integer.toHexString(firstByte & 0xFF));
         //如果是一个报文的第一帧，清空当前缓冲区数据
         if((firstByte & 0xFF) == 0x00){
             frameBuffer.clear();
@@ -66,10 +66,10 @@ public enum DatasBuffer {
             byte firstByte = frameBuffer.get(i)[0];
 //            Log.d(TAG, "firstByte = " + Integer.toHexString(firstByte&0xFF));
             if((firstByte & 0x7F) == 0x00){ //如果是帧头，退出循环
-                Log.d(TAG,"是帧头，退出循环");
+//                Log.d(TAG,"是帧头，退出循环");
                 break;
             }else{
-                Log.d(TAG,"不是帧头，移除第一帧");
+//                Log.d(TAG,"不是帧头，移除第一帧");
                 frameBuffer.remove(0);
                 i = i - 1;
             }
@@ -82,7 +82,7 @@ public enum DatasBuffer {
         byte[] firstFrame = frameBuffer.get(0);
         //当前按照376.1协议计算长度
         int lenbyte = (firstFrame[3] & 0xFF)  + 4;
-        Log.d(TAG,"lenbyte = " + lenbyte);
+//        Log.d(TAG,"lenbyte = " + lenbyte);
         byte[] frameComplete = new byte[lenbyte];
         int index = 0;
         int circle = (lenbyte / 18);//本次组帧循环次数，根据本次报文长度计算
@@ -100,7 +100,7 @@ public enum DatasBuffer {
             leftLen = lenbyte - (18 * index);
 //            Log.d(TAG,"剩余字节数 leftLen = " + leftLen);
             byte[] currentFrame = frameBuffer.get(index);
-            Log.d(TAG,"currentFrame = " + MethodsUtil.METHODS_UTIL.byteToHexString(currentFrame));
+//            Log.d(TAG,"currentFrame = " + MethodsUtil.METHODS_UTIL.byteToHexString(currentFrame));
             if(index != (frameBuffer.size()-1)){
                 for(int j=1;(j<19 && j<leftLen);j++){
 //                    Log.d(TAG,"index*18 + (j-1) = " + (index*18 + (j-1)));
@@ -152,7 +152,7 @@ public enum DatasBuffer {
     public byte[] getFirstToSend(){
         Log.d(TAG,"in getFirstToSend. frameToSend.size() = " + frameToSend.size());
         if(frameToSend.size() > 0){
-            Log.d(TAG,"frameToSend.get(0) = " + MethodsUtil.METHODS_UTIL.byteToHexString(frameToSend.get(0)));
+//            Log.d(TAG,"frameToSend.get(0) = " + MethodsUtil.METHODS_UTIL.byteToHexString(frameToSend.get(0)));
             return frameToSend.get(0);
         }else{
             return null;
@@ -163,11 +163,11 @@ public enum DatasBuffer {
      * 清理当前已经发送的第一帧
      */
     public void clearFirstSended(){
-        Log.d(TAG,"in clearFirstSended . frameToSend.size() = " + frameToSend.size());
+//        Log.d(TAG,"in clearFirstSended . frameToSend.size() = " + frameToSend.size());
         if(frameToSend.size() > 0){
             frameToSend.remove(0);
         }
-        Log.d(TAG,"in clearFirstSended . frameToSend.size() = " + frameToSend.size());
+//        Log.d(TAG,"in clearFirstSended . frameToSend.size() = " + frameToSend.size());
     }
 
 
