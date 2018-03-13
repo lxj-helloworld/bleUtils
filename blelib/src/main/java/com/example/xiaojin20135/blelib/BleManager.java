@@ -385,6 +385,8 @@ public enum BleManager {
                         mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
                     }
                 },50);
+            }else{
+                Log.d(TAG,"发送成功");
             }
         }else{
            Log.d(TAG,"mWriteCharacteristic is null or datas is null.");
