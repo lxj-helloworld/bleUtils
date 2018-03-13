@@ -377,6 +377,15 @@ public enum BleManager {
             mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
             Log.d(TAG,"sendData sendResult = " + sendResult);
+            if(!sendResult){
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG,"发送失败，重发");
+                        mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
+                    }
+                },50);
+            }
         }else{
            Log.d(TAG,"mWriteCharacteristic is null or datas is null.");
         }
@@ -478,6 +487,7 @@ public enum BleManager {
             mConfirmCharacteristic.setValue(datas);
             mConfirmCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             sendResult = mBluetoothGatt.writeCharacteristic(mConfirmCharacteristic);
+
             Log.d(TAG,"sendConfirm sendResult = " + sendResult);
         }else{
             Log.d(TAG,"mConfirmCharacteristic is null");
