@@ -22,4 +22,6 @@ public enum BleConstant {
     public static final int SCANNEWDEVICE = 10;
     //开始连接
     public static final int STARTCONNECT = 11;
+    //发送失败，重新发送
+    public static final int SENDFAILED_TRY = 12;
 }

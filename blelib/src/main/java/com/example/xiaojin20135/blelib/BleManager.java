@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.example.xiaojin20135.blelib.helps.BleConstant.SCANNEWDEVICE;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.SENDFAILED_TRY;
 import static com.example.xiaojin20135.blelib.helps.BleConstant.STARTCONNECT;
 
 /**
@@ -67,6 +68,9 @@ public enum BleManager {
     private List<MyBluetoothDevice> deviceList = new ArrayList<>();
     //新发现设备通知
     private Handler bleHandler;
+    //发送标示
+    private Handler sendHandler;
+    private byte[] currentFrame = {};
 
     private DatasBuffer datasBuffer;
 
@@ -327,7 +331,8 @@ public enum BleManager {
                 Log.d(TAG, "onCharacteristicWrite: " + "发送成功: " + " " + MethodsUtil.METHODS_UTIL.byteToHexString(characteristic.getValue()));
                 //如果发送成功，移除当前发送成功的帧，并且发送下一帧
                 datasBuffer.clearFirstSended();
-                sendData(datasBuffer.getFirstToSend());
+                boolean sendOk = sendData(datasBuffer.getFirstToSend());
+
             }else{
                 //如果发送失败，
                 Log.d(TAG, "onCharacteristicWrite: " + "发送失败 status = " + status);
@@ -369,6 +374,7 @@ public enum BleManager {
      */
     private boolean sendData(byte[] datas){
         Log.d(TAG, "in sendData. datas = " + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+        currentFrame = datas;
         boolean sendResult = false;
         Log.d(TAG,"mWriteCharacteristic = " + mWriteCharacteristic);
         if(mWriteCharacteristic != null && datas != null){
@@ -377,7 +383,8 @@ public enum BleManager {
             mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
             if(!sendResult){
-                mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
+                //发送失败，重新发送
+                sendHandlerStatus(SENDFAILED_TRY,"");
             }
         }else{
            Log.d(TAG,"mWriteCharacteristic is null or datas is null.");
@@ -550,7 +557,23 @@ public enum BleManager {
             bleHandler.sendMessage(message);
         }else{
             Log.d(TAG,"handler is null.");
+        }
+    }
 
+    /**
+     * 标示发送失败
+     * @param state
+     * @param obj
+     */
+    public void sendHandlerStatus(int state,String obj){
+        Log.d(TAG,"sendHandlerStatus. state = " + state);
+        if(sendHandler != null){
+            Message message = new Message();
+            message.what = state;
+            message.obj = obj;
+            sendHandler.sendMessage(message);
+        }else{
+            Log.d(TAG,"handler is null.");
         }
     }
 
