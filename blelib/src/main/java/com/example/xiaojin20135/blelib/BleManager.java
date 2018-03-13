@@ -447,7 +447,7 @@ public enum BleManager {
         //如果待发送报文数量大于0，开始发送
         if(datasBuffer.getFrameToSend().size() > 0){
             Log.d(TAG,"发送第一帧");
-            sendData(datasBuffer.getFirstToSend());
+            sendResult = sendData(datasBuffer.getFirstToSend());
         }
         return sendResult;
     }
