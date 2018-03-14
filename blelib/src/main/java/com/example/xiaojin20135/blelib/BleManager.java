@@ -70,7 +70,11 @@ public enum BleManager {
     private Handler bleHandler;
     //发送标示
     private Handler sendHandler;
+    //当前发送的分帧
     private byte[] currentFrame = {};
+    //当前发送的完整帧
+    private byte[] currentCompleteFrame = {};
+
 
     private DatasBuffer datasBuffer;
 
@@ -381,6 +385,9 @@ public enum BleManager {
             mWriteCharacteristic.setValue(datas);
             mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
+            //设置当前分帧发送成功以及失败标识，
+            // 如果发送成功，在onCharacteristicWrite回调成功后，开始发送下一帧，
+            //如果发送失败，即使收到onCharacteristicWrite回到成功，也不继续发送下一帧，等待发送失败的再次发送
             sendSuccess  = sendResult;
             if(sendResult){
                 Log.d(TAG,"in sendData . 发送成功:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
@@ -396,7 +403,7 @@ public enum BleManager {
     }
 
     /**
-     * 发送失败， 重试
+     * 分帧发送失败， 重试
      * @return
      */
     public boolean sendTry(){
@@ -405,11 +412,22 @@ public enum BleManager {
     }
 
     /**
+     * 完整帧发送失败，重试
+     * @return
+     */
+    public boolean sendComplete(){
+        Log.d(TAG,"sendTry 发送失败，重新发送:" + MethodsUtil.METHODS_UTIL.byteToHexString(currentCompleteFrame));
+        return sendSliceData(currentCompleteFrame);
+    }
+
+    /**
      * 分帧发送
      * @param datas
      * @return
      */
     public boolean sendSliceData(byte[] datas){
+        //记录当前发送的完整报文
+        currentCompleteFrame = datas;
         Log.d(TAG, "in sendSliceData. datas = " + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
         //清理当前需要发送的数据
         datasBuffer.clearToSend();
@@ -455,13 +473,12 @@ public enum BleManager {
         }
         //如果待发送报文数量大于0，开始发送
         if(datasBuffer.getFrameToSend().size() > 0){
-//            Log.d(TAG,"发送第一帧");
+            //开始发送分帧
             sendResult = sendData(datasBuffer.getFirstToSend());
-            Log.d(TAG,"in sendSliceData, sendResult = " + sendResult);
+            Log.d(TAG,"发送结果。 in sendSliceData, sendResult = " + sendResult);
         }
         return sendResult;
     }
-
     /**
      * 断开连接
      */
@@ -528,10 +545,6 @@ public enum BleManager {
         encryptResult[18] = 0x00;
         return sendData(encryptResult);
     }
-
-
-
-
     /**
      * 返回当前已经扫描到的设备的列表
      * @return
