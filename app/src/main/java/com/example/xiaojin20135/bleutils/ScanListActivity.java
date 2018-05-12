@@ -90,6 +90,7 @@ public class ScanListActivity extends AppCompatActivity {
                     Log.d(TAG,"开始连接");
                 }else if(msg.what == BleConstant.CONNECTED){
                     Log.d(TAG,"连接成功！");
+                    bleManager.stopScan ();
                 }else if(msg.what == BleConstant.CONNECTDONE){
                     Log.d(TAG,"认证完成，可跳转");
                     Intent intent = new Intent(ScanListActivity.this,SendTestActivity.class);

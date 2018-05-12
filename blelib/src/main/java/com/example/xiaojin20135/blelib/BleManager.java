@@ -132,6 +132,19 @@ public enum BleManager {
         deviceList.clear();
         scanLeDevice(true);
     }
+
+
+    /**
+     * 停止扫描
+     */
+    public void stopScan(){
+        Log.d (TAG,"停止扫描！");
+        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+            scanLeDevice(false);
+        }
+
+    }
+
     /**
      * 扫描周围的蓝牙设备
      * @param enable
