@@ -87,8 +87,6 @@ public enum BleManager {
     private String bleAddress = "";
 
 
-
-
     /**
      * 初始化特征字
      * @param uuid_service
@@ -104,8 +102,6 @@ public enum BleManager {
         UUID_CONFIRM = UUID.fromString(uuid_confirm);
         UUID_NOTIFICATION_DES2 = UUID.fromString(uuid_notification_des2);
         this.activity = activity;
-        ble_auto_connected_key = PreferenceManager.getDefaultSharedPreferences(activity).getBoolean("ble_auto_connected_key",false);
-        bleAddress = PreferenceManager.getDefaultSharedPreferences(activity).getString ("bleAddress","");
         datasBuffer = DatasBuffer.DATAS_BUFFER;
         initBle();
 
@@ -638,5 +634,21 @@ public enum BleManager {
 
     public void setSendHandler(Handler sendHandler) {
         this.sendHandler = sendHandler;
+    }
+
+    public boolean isBle_auto_connected_key () {
+        return ble_auto_connected_key;
+    }
+
+    public void setBle_auto_connected_key (boolean ble_auto_connected_key) {
+        this.ble_auto_connected_key = ble_auto_connected_key;
+    }
+
+    public String getBleAddress () {
+        return bleAddress;
+    }
+
+    public void setBleAddress (String bleAddress) {
+        this.bleAddress = bleAddress;
     }
 }
