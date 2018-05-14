@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.example.xiaojin20135.blelib.bean.MyBluetoothDevice;
@@ -80,6 +81,12 @@ public enum BleManager {
 
     //标示是否发送成功，如果发送成功，收到成功回调之后，继续发送下一帧，如果处于发送失败状态，即使收到成功回调也不发送下一帧
     public static boolean sendSuccess = false;
+    //是否自动配对
+    private boolean ble_auto_connected_key;
+    //自动配对的蓝牙设备Address
+    private String bleAddress = "";
+
+
 
 
     /**
@@ -97,6 +104,8 @@ public enum BleManager {
         UUID_CONFIRM = UUID.fromString(uuid_confirm);
         UUID_NOTIFICATION_DES2 = UUID.fromString(uuid_notification_des2);
         this.activity = activity;
+        ble_auto_connected_key = PreferenceManager.getDefaultSharedPreferences(activity).getBoolean("ble_auto_connected_key",true);
+        bleAddress = PreferenceManager.getDefaultSharedPreferences(activity).getString ("bleAddress","C8:FD:19:86:DC:0C");
         datasBuffer = DatasBuffer.DATAS_BUFFER;
         initBle();
 
@@ -185,6 +194,11 @@ public enum BleManager {
                 MyBluetoothDevice myBluetoothDevice = new MyBluetoothDevice(device,rssi);
                 deviceList.add(myBluetoothDevice);
                 sendStateChange(SCANNEWDEVICE,"");
+                //判断是是否需要自动连接 如果设置为自动连接，并且蓝牙地址不为空，并且地址匹配
+                if(ble_auto_connected_key && !bleAddress.equals ("") && device.getAddress ().equals (bleAddress)){
+                    setmDevice(device);
+                    startConnect();
+                }
             }else{
                 Log.d(TAG,"扫描设备名称获取失败，未识别的设备。");
             }
