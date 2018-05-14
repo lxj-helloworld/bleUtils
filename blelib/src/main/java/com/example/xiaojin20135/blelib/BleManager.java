@@ -104,8 +104,8 @@ public enum BleManager {
         UUID_CONFIRM = UUID.fromString(uuid_confirm);
         UUID_NOTIFICATION_DES2 = UUID.fromString(uuid_notification_des2);
         this.activity = activity;
-        ble_auto_connected_key = PreferenceManager.getDefaultSharedPreferences(activity).getBoolean("ble_auto_connected_key",true);
-        bleAddress = PreferenceManager.getDefaultSharedPreferences(activity).getString ("bleAddress","C8:FD:19:86:DC:0C");
+        ble_auto_connected_key = PreferenceManager.getDefaultSharedPreferences(activity).getBoolean("ble_auto_connected_key",false);
+        bleAddress = PreferenceManager.getDefaultSharedPreferences(activity).getString ("bleAddress","");
         datasBuffer = DatasBuffer.DATAS_BUFFER;
         initBle();
 
