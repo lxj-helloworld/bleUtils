@@ -2,12 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://E:\AndroidGithubModules\ble\bleUtils\BleUtils.iml" filepath="E:\AndroidGithubModules\ble\bleUtils\BleUtils.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://E:\AndroidGithubModules\ble\bleUtils\app\app.iml" filepath="E:\AndroidGithubModules\ble\bleUtils\app\app.iml" />
       <module fileurl="file://$PROJECT_DIR$/bleUtils.iml" filepath="$PROJECT_DIR$/bleUtils.iml" />
       <module fileurl="file://$PROJECT_DIR$/blelib/blelib.iml" filepath="$PROJECT_DIR$/blelib/blelib.iml" />
-      <module fileurl="file://E:\AndroidGithubModules\ble\bleUtils\blelib\blelib.iml" filepath="E:\AndroidGithubModules\ble\bleUtils\blelib\blelib.iml" />
     </modules>
   </component>
 </project>

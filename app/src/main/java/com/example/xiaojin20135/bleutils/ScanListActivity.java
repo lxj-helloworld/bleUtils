@@ -10,6 +10,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 
 import com.example.xiaojin20135.blelib.BleManager;
 import com.example.xiaojin20135.blelib.adapter.BleDeviceAdapter;
@@ -102,5 +103,14 @@ public class ScanListActivity extends AppCompatActivity {
         };
         bleManager.setBleHandler(handler);
 
+    }
+
+    @Override
+    public boolean onKeyDown (int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction () == KeyEvent.ACTION_DOWN){
+            bleManager.stopScan ();
+
+        }
+        return super.onKeyDown (keyCode, event);
     }
 }

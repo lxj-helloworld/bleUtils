@@ -138,9 +138,12 @@ public enum BleManager {
      * 停止扫描
      */
     public void stopScan(){
-        Log.d (TAG,"停止扫描！");
-        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+        Log.d (TAG,"尝试停止扫描！");
+        if (mBluetoothAdapter != null) {
             scanLeDevice(false);
+            Log.d (TAG,"停止扫描成功");
+        }else{
+            Log.d (TAG,"mBluetoothAdapter is null or mBluetoothAdapter is disenable");
         }
 
     }
