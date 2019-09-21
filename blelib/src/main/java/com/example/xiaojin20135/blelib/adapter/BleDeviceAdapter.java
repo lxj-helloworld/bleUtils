@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.xiaojin20135.blelib.BleManager;
 import com.example.xiaojin20135.blelib.R;
@@ -53,7 +54,12 @@ public class BleDeviceAdapter extends RecyclerView.Adapter implements View.OnCli
             MyViewHolder myViewHolder = (MyViewHolder)holder;
             MyBluetoothDevice myBluetoothDevice = datas.get(position);
             //名称
-            myViewHolder.name_TV.setText(myBluetoothDevice.getBluetoothDevice().getName());
+            if(myBluetoothDevice.getBluetoothDevice().getName() == null || "".equals(myBluetoothDevice.getBluetoothDevice().getName())){
+                myViewHolder.name_TV.setText("未知设备");
+            }else{
+                myViewHolder.name_TV.setText(myBluetoothDevice.getBluetoothDevice().getName());
+            }
+
             //mac地址
             myViewHolder.mac_address_TV.setText(myBluetoothDevice.getBluetoothDevice().getAddress());
             //信号强度
@@ -70,6 +76,7 @@ public class BleDeviceAdapter extends RecyclerView.Adapter implements View.OnCli
 
     @Override
     public void onClick(View v) {
+        Toast.makeText(activity,"正在连接，请稍等...",Toast.LENGTH_SHORT).show();
         //获取点击位置索引
         int position = recyclerView.getChildAdapterPosition(v);
         Log.d(TAG,"position = " + position);

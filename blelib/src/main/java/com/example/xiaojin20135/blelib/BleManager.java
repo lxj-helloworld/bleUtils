@@ -12,9 +12,11 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import com.example.xiaojin20135.blelib.bean.MyBluetoothDevice;
@@ -25,11 +27,15 @@ import com.example.xiaojin20135.blelib.helps.MethodsUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import static com.example.xiaojin20135.blelib.helps.BleConstant.SCANNEWDEVICE;
 import static com.example.xiaojin20135.blelib.helps.BleConstant.SENDFAILED_TRY;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.SEND_SUCCESS;
 import static com.example.xiaojin20135.blelib.helps.BleConstant.STARTCONNECT;
+
 
 /**
  * Created by xiaojin20135 on 2018-02-28.
@@ -60,6 +66,8 @@ public enum BleManager {
     BluetoothGattCharacteristic mNotificationCharacteristic;
     //确认特征字
     BluetoothGattCharacteristic mConfirmCharacteristic;
+    //得到想要的Servce
+    BluetoothGattService gattService;
     /**
      * 表示远程蓝牙设备，利用他可以通过Bluetoothsocket请求与某个远程设备建立连接
      */
@@ -76,7 +84,8 @@ public enum BleManager {
     //当前发送的完整帧
     private byte[] currentCompleteFrame = {};
 
-
+    private Timer timer = new Timer();;
+    private int timesNum = 0;
     private DatasBuffer datasBuffer;
 
     //标示是否发送成功，如果发送成功，收到成功回调之后，继续发送下一帧，如果处于发送失败状态，即使收到成功回调也不发送下一帧
@@ -86,7 +95,14 @@ public enum BleManager {
     //自动配对的蓝牙设备Address
     private String bleAddress = "";
 
+    public static int frameCount = 1;
+    public static int frameCurrentCount = 0;
 
+    public static boolean isSending = false;
+    public static long lastSuccessTime;
+    public static boolean isSaving = false;
+    public static boolean isUpdating = false;
+    public Timer saveTimer = new Timer();
     /**
      * 初始化特征字
      * @param uuid_service
@@ -105,6 +121,7 @@ public enum BleManager {
         datasBuffer = DatasBuffer.DATAS_BUFFER;
         initBle();
 
+
     }
 
     /**
@@ -115,10 +132,11 @@ public enum BleManager {
         final BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
         //如果蓝牙未打开，提示用户打开蓝牙
-        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            activity.startActivityForResult(enableBtIntent, 1);
-        }
+        // 取消注释会提示两遍打开蓝牙
+//        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+//            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            activity.startActivityForResult(enableBtIntent, 1);
+//        }
     }
 
     /**
@@ -225,7 +243,25 @@ public enum BleManager {
             Log.d(TAG,"mDevice is null");
         }
     }
+    /**
+     * 断开连接连接
+     */
+    public void disconnect() {
+        //已选中的扫描设备不为空，尝试连接。
+        if (mDevice != null) {
+            if (mBluetoothGatt != null) {
+                //断开当前已经建立的一个连接，或者去掉当前正在尝试建立的连接
+                mBluetoothGatt.disconnect();
+                //关闭 GATT client
+                mBluetoothGatt.close();
+                mBluetoothGatt = null;
+            }else{
+            }
 
+        }else{
+            Log.d(TAG,"mDevice is null");
+        }
+    }
     private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         /**
          * Callback indicating when GATT client has connected/disconnected to/from a remote GATT server.
@@ -237,6 +273,7 @@ public enum BleManager {
          *                 2：in connected state
          *                 3：in disconnecting state
          */
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.d(TAG," in onConnectionStateChange. status = " + status);
@@ -265,7 +302,9 @@ public enum BleManager {
             //已连接 当蓝牙设备已经连接 获取ble设备上面的服务
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.d(TAG, "连接成功，读取Services。");
-                mBluetoothGatt.discoverServices();
+                requestMtu();
+//                mBluetoothGatt.requestConnectionPriority(CONNECTION_PRIORITY_LOW_POWER);
+//                mBluetoothGatt.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {//当设备无法连接
                 if (mBluetoothGatt != null) {
                     mBluetoothGatt.disconnect();
@@ -286,7 +325,7 @@ public enum BleManager {
                 boolean serviceFound;
                 if (mBluetoothGatt != null && isServiceConnected) {
                     //得到想要的Servce
-                    BluetoothGattService gattService = mBluetoothGatt.getService(UUID_SERVICE);
+                    gattService = mBluetoothGatt.getService(UUID_SERVICE);
                     //得到写特征字
                     mWriteCharacteristic = gattService.getCharacteristic(UUID_WRITE);
                     mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
@@ -373,9 +412,10 @@ public enum BleManager {
         //Callback triggered as a result of a remote characteristic notification.
         @Override
         public final void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-//            Log.d(TAG,"on onCharacteristicChanged. 收到蓝牙设备发来的数据。");
+            Log.d(TAG,"on onCharacteristicChanged. 收到蓝牙设备发来的数据。");
             byte[] value = characteristic.getValue();
             if(value != null){
+                Log.d(TAG, MethodsUtil.METHODS_UTIL.byteToHexString(value));
                 receiveManage(value);
             }else{
                 Log.d(TAG,"value is null ");
@@ -393,11 +433,21 @@ public enum BleManager {
             Log.d(TAG," in onReadRemoteRssi.");
             super.onReadRemoteRssi(gatt, rssi, status);
         }
-        //Callback indicating the MTU for a given device connection has changed.
+
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-            Log.d(TAG," in onMtuChanged. mtu = " + mtu + " ; status = " +status);
             super.onMtuChanged(gatt, mtu, status);
+            Log.d("onMtuChanged"," onMtuChanged");
+            if (BluetoothGatt.GATT_SUCCESS == status) {
+//                mBluetoothGatt.discoverServices();
+                mBluetoothGatt.discoverServices();
+                Log.d("BleService", "onMtuChanged success MTU = " + mtu);
+                //得到写特征字
+//                mWriteCharacteristic = gattService.getCharacteristic(UUID_WRITE);
+//                mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+            }else {
+                Log.d("BleService", "onMtuChanged fail ");
+            }
         }
     };
     /**
@@ -405,25 +455,38 @@ public enum BleManager {
      * @param datas
      */
     private boolean sendData(byte[] datas){
+        frameCurrentCount ++;
+
         currentFrame = datas;
         boolean sendResult = false;
+        //得到想要的Servce
+        if(mBluetoothGatt == null){
+            return false;
+        }
+        gattService = mBluetoothGatt.getService(UUID_SERVICE);
+//        //得到写特征字
+        mWriteCharacteristic = gattService.getCharacteristic(UUID_WRITE);
+//        mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
         if(mWriteCharacteristic != null && datas != null){
             mWriteCharacteristic.setValue(datas);
             mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-            sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
+            if(mBluetoothGatt !=  null){
+                sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
+            }
             //设置当前分帧发送成功以及失败标识，
             // 如果发送成功，在onCharacteristicWrite回调成功后，开始发送下一帧，
             //如果发送失败，即使收到onCharacteristicWrite回到成功，也不继续发送下一帧，等待发送失败的再次发送
             sendSuccess  = sendResult;
             if(sendResult){
-                Log.d(TAG,"in sendData . 发送成功:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+                Log.d(TAG,"in sendData1 . 发送成功:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+                sendHandlerStatus(SEND_SUCCESS,MethodsUtil.METHODS_UTIL.byteToHexString(datas));
             }else{
-                Log.d(TAG,"in sendData . 发送失败:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+                Log.d(TAG,"in sendData1 . 发送失败:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
                 //发送失败，重新发送
                 sendHandlerStatus(SENDFAILED_TRY,"");
             }
         }else{
-           Log.d(TAG,"mWriteCharacteristic is null or datas is null.");
+            Log.d(TAG,"mWriteCharacteristic is null or datas is null.");
         }
         return sendResult;
     }
@@ -437,13 +500,13 @@ public enum BleManager {
         return sendData(currentFrame);
     }
 
-    /**
-     * 完整帧发送失败，重试
-     * @return
-     */
-    public boolean sendComplete(){
-        Log.d(TAG,"sendTry 发送失败，重新发送:" + MethodsUtil.METHODS_UTIL.byteToHexString(currentCompleteFrame));
-        return sendSliceData(currentCompleteFrame);
+
+
+    private static int FRAME_LENGTH = 200;
+
+    public boolean sendSliceData(byte[] datas,FrameReceivedLis frameReceivedLis){
+        datasBuffer.setFrameReceivedLis(frameReceivedLis);
+        return sendSliceData(datas);
     }
 
     /**
@@ -463,8 +526,10 @@ public enum BleManager {
             int len = datas.length;
             Log.d(TAG,"len = " + len);
             //分帧个数
-            int count =  (len / 18);
-            if(len%18 != 0){
+            int count =  (len / FRAME_LENGTH);
+            frameCount = count == 0 ? 1 : count;
+            frameCurrentCount = 0;// 归零
+            if(len%FRAME_LENGTH != 0){
                 count = count + 1;
             }
 //            Log.d(TAG,"count = " + count + "  Math.ceil(len / 18) = " + Math.ceil(len / 18));
@@ -472,25 +537,30 @@ public enum BleManager {
             int from = 0;
             for(int i=0;i<count;i++){
                 //帧
-                byte[] frame = new byte[19];
+                byte[] frame = new byte[FRAME_LENGTH+2];
                 int length=0;
                 length=sylen;
-                if((sylen/(18+1))<1){
+                if((sylen/(FRAME_LENGTH+1))<1){
                     frame[0]=(byte)(0x80|i);
-                    sylen=sylen%19;
+                    sylen=sylen%(FRAME_LENGTH+1);
                 }else{
                     frame[0]=(byte)i;
-                    sylen=sylen-18;
+                    sylen=sylen-FRAME_LENGTH;
                 }
-                for(int k=0;k<18;k++){
+                int k = 0;
+                for(k=0;k<FRAME_LENGTH;k++){
                     if(k<length){
 //                        Log.d(TAG,"k+1 = " + (k+1) + " ; (from + k) = " + (from + k));
                         frame[k+1]=datas[from+k];
                     }else{
-                        frame[k+1]=0;
+                        frame[k+1]=0x55;
+                        break;
                     }
                 }
-                from=from+18;
+                if(k == FRAME_LENGTH){
+                    frame[k+1]=0x55;
+                }
+                from=from+FRAME_LENGTH;
 //                Log.d(TAG,"frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
                 datasBuffer.addToSend(frame);
             }
@@ -517,7 +587,7 @@ public enum BleManager {
      * 接受报文处理
      */
     private void receiveManage(byte[] receiveArr){
-        Log.d(TAG,"receiveArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(receiveArr));
+//        Log.d(TAG,"接收receiveArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(receiveArr));
         byte firstData = (byte)(receiveArr[0]);
 //        Log.d(TAG,"firstData = " + Integer.toHexString(firstData & 0xFF));
         if((firstData & 0xFF) == 0xFF){ //蓝牙设备发来的加密串，
@@ -651,4 +721,30 @@ public enum BleManager {
     public void setBleAddress (String bleAddress) {
         this.bleAddress = bleAddress;
     }
+
+    /**
+     * Author：yuwenqiang
+     * Ceated at 2019/2/26 18:50
+     * Description：清空定时器；
+     * 结束时清空所有定时器，防止定时任务继续执行。
+     */
+    public void clearTimers(){
+        timer.cancel();
+        timer = new Timer();
+        timesNum = 0;
+        isSending = false;
+        Log.d(TAG, "clearTimers: ");
+    }
+
+    // 重写MTU
+    public boolean requestMtu() {
+        if (mBluetoothGatt != null && Build.VERSION.SDK_INT >=Build.VERSION_CODES.LOLLIPOP) {
+            // 25 *6 +3 =153
+            return mBluetoothGatt.requestMtu(210);
+        }else {
+            sendStateChange(BleConstant.LOWVERSION,"err");
+            return false;
+        }
+    }
+
 }

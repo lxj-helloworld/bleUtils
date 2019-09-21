@@ -7,39 +7,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.example.xiaojin20135.bleutils.SendTestActivity">
-    <Button
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="读取终端时钟，376.1"
-        android:onClick="sendTest"/>
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="打开通道"
-        android:onClick="openSignal"/>
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="开始检测"
-        android:onClick="startWork"/>
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="停止检测"
-        android:onClick="stopWork"/>
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/frame_TV"/>
+        android:layout_height="match_parent"
+        android:id="@+id/content_fragment"></FrameLayout>
 
 
-    </ScrollView>
+
 </LinearLayout>

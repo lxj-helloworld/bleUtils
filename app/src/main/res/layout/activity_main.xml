@@ -6,23 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:text="扫描"
-        android:onClick="startScan"
-        tools:ignore="HardcodedText"/>
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:text="连接"
-        android:onClick="startConnect"
-        tools:ignore="HardcodedText"/>
-
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -14,6 +14,7 @@ public enum BleConstant {
     public static final int CONNECTED= 2; //连接成功
     public static final int DISCONNECTING = 3; //正在断开
     public static final int CONNECTDONE = 4;//连接后加密认证完成，可跳转
+    public static final int LOWVERSION = 5;//系统版本过低，无法设置MTU
 
     //发现新设备what值
     public static final int SCANNEWDEVICE = 10;
@@ -21,4 +22,6 @@ public enum BleConstant {
     public static final int STARTCONNECT = 11;
     //发送失败，重新发送
     public static final int SENDFAILED_TRY = 12;
+    //发送成功
+    public static final int SEND_SUCCESS = 13;
 }

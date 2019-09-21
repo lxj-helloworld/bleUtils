@@ -16,8 +16,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/name_TV"
             android:text="name"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF">
+            android:textStyle="bold">
         </TextView>
         <TextView
             android:layout_width="match_parent"
@@ -26,7 +25,6 @@
             android:id="@+id/mac_address_TV"
             android:textSize="13dp"
             android:text="mac_address"
-            android:textColor="#FCFCFC"
             >
         </TextView>
     </LinearLayout>
@@ -37,6 +35,6 @@
         android:id="@+id/rssi_TV"
         android:text="-0"
         android:textStyle="bold"
-        android:textColor="#FFFFFF">
+        >
     </TextView>
 </LinearLayout>

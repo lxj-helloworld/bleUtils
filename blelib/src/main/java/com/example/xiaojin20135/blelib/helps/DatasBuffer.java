@@ -5,6 +5,7 @@ import android.util.Log;
 import com.example.xiaojin20135.blelib.FrameReceivedLis;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -22,7 +23,7 @@ public enum DatasBuffer {
     DATAS_BUFFER;
     private static final String TAG = "DatasBuffer";
     //当前帧缓存
-    private List<byte[]> frameBuffer = new ArrayList<>();
+    private volatile List<byte[]>  frameBuffer = new ArrayList<>();
     //当前完整报文缓存
     private List<byte[]> frameBufferComplete = new ArrayList<>();
     //当前需要发送的报文
@@ -42,10 +43,12 @@ public enum DatasBuffer {
      * 新增一帧数据
      * @param frame
      */
-    public void addFrame(byte[] frame){
+    public synchronized void addFrame(byte[] frame){
+        if(frame == null || frame.length == 0){
+            return;
+        }
         //获取第一个字节，判断是新报文的开头还是一个报文的结束
         byte firstByte = frame[0];
-//        Log.d(TAG,"firstByte & 0xFF = " + Integer.toHexString(firstByte & 0xFF));
         //如果是一个报文的第一帧，清空当前缓冲区数据
         if((firstByte & 0xFF) == 0x00){
             frameBuffer.clear();
@@ -53,67 +56,17 @@ public enum DatasBuffer {
         frameBuffer.add(frame);
         //判断第一个字节是否是结束帧，如果是，组织一个完整的报文
         if(((firstByte & 0xFF) & 0x80) == 0x80){
-            makeACompleteFrame();
-        }
-    }
-    /**
-     * 返回一帧完整的报文
-     */
-    public synchronized void  makeACompleteFrame(){
-        //遍历当前缓冲区，判断处于第一个位置的报文的第一个字节是否是帧头
-        for(int i=0;i<frameBuffer.size();i++){
-            byte firstByte = frameBuffer.get(i)[0];
-//            Log.d(TAG, "firstByte = " + Integer.toHexString(firstByte&0xFF));
-            if((firstByte & 0x7F) == 0x00){ //如果是帧头，退出循环
-//                Log.d(TAG,"是帧头，退出循环");
-                break;
-            }else{
-//                Log.d(TAG,"不是帧头，移除第一帧");
-                frameBuffer.remove(0);
-                i = i - 1;
+            //复制数组，不包含第一个元素
+            byte[] resultArr = Arrays.copyOfRange(frameBuffer.get(0),1,frame.length);
+            Log.d(TAG,"resultArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(resultArr));
+            for(int i=1;i<frameBuffer.size();i++){
+                byte[] tempArr = Arrays.copyOfRange(frameBuffer.get(i),1,frame.length);
+                resultArr = Arrays.copyOf(resultArr,resultArr.length + tempArr.length);
+                System.arraycopy(tempArr,0,resultArr,resultArr.length - tempArr.length,tempArr.length);
             }
+            frameReceivedLis.receive(resultArr);
+            frameBuffer.clear();
         }
-        if(frameBuffer.size() == 0){
-            return;
-        }
-        int circle = this.frameBuffer.size();
-        byte[] allFrame = new byte[circle * 18];
-        Log.d(TAG,"allFrame.length = " + allFrame.length);
-        for(int i=0;i<circle;i++){
-            byte[] frame = frameBuffer.get(i);
-            for(int j=0;j<18;j++){
-                allFrame[j+i*18] = frame[j+1];
-            }
-        }
-        Log.d(TAG,"allFrame = " + MethodsUtil.METHODS_UTIL.byteToHexString(allFrame));
-        //拆分，分发
-        int left = allFrame.length;
-        int fromIndex = 0;
-        while(left > 0){
-            Log.d(TAG,"2 + fromIndex = " + (2 + fromIndex));
-            if((2 + fromIndex) < allFrame.length){
-                int lenByte = (allFrame[2 + fromIndex] & 0xFF) + 4;
-                Log.d(TAG,"lenByte = " + lenByte);
-                if(lenByte < left && lenByte > 4){
-                    byte[] frameComplete = new byte[lenByte];
-                    for(int i=0;i<lenByte;i++){
-                        frameComplete[i] = allFrame[i+fromIndex];
-                    }
-                    fromIndex = fromIndex + lenByte;
-                    left = left - lenByte;
-                    if(frameReceivedLis != null){
-                        frameReceivedLis.receive(frameComplete);
-                    }
-                }else{
-//                    Log.d(TAG,"lenByte < left = " + (lenByte < left));
-                    break;
-                }
-            }else{
-                Log.d(TAG,"没有更多数据");
-                break;
-            }
-        }
-        frameBuffer.clear();
     }
     /**
      * 清理当前需要发送的报文
@@ -137,7 +90,6 @@ public enum DatasBuffer {
     public byte[] getFirstToSend(){
         Log.d(TAG,"in getFirstToSend. frameToSend.size() = " + frameToSend.size());
         if(frameToSend.size() > 0){
-//            Log.d(TAG,"frameToSend.get(0) = " + MethodsUtil.METHODS_UTIL.byteToHexString(frameToSend.get(0)));
             return frameToSend.get(0);
         }else{
             return null;
@@ -148,11 +100,9 @@ public enum DatasBuffer {
      * 清理当前已经发送的第一帧
      */
     public void clearFirstSended(){
-//        Log.d(TAG,"in clearFirstSended . frameToSend.size() = " + frameToSend.size());
         if(frameToSend.size() > 0){
             frameToSend.remove(0);
         }
-//        Log.d(TAG,"in clearFirstSended . frameToSend.size() = " + frameToSend.size());
     }
 
 
