@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.example.xiaojin20135.basemodule.activity.ToolBarActivity;
+import com.example.xiaojin20135.basemodule.activity.login.BaseLoginActivity;
 import com.example.xiaojin20135.blelib.fragment.ScanListFragment;
 
 public class ScanListActivity extends ToolBarActivity {
@@ -17,7 +18,6 @@ public class ScanListActivity extends ToolBarActivity {
         scanListFragment.setArguments(bundle);
 
         getSupportFragmentManager().beginTransaction().replace(R.id.content_fragment,scanListFragment).commit();
-
     }
 
     @Override

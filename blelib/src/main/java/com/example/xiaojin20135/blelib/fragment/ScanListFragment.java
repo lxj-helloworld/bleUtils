@@ -1,6 +1,7 @@
 package com.example.xiaojin20135.blelib.fragment;
 
 
+import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,6 +27,10 @@ import com.example.xiaojin20135.blelib.helps.BleConstant;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.weyye.hipermission.HiPermission;
+import me.weyye.hipermission.PermissionCallback;
+import me.weyye.hipermission.PermissionItem;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -44,6 +49,8 @@ public class ScanListFragment extends BaseFragment {
     private Handler handler; //扫描到新设备通知
     //连接成功后跳转到的Activity
     private String className = "";
+    //默认权限
+    List<PermissionItem> permissonItems = new ArrayList<PermissionItem> ();
 
 
     public ScanListFragment() {
@@ -53,11 +60,12 @@ public class ScanListFragment extends BaseFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_scan_list, container, false);
         initView(view);
         initEvents(view);
-        bleManager.startScan();
         className = getArguments().getString("className");
+        requestPermission();
         return view;
     }
 
@@ -142,5 +150,35 @@ public class ScanListFragment extends BaseFragment {
         super.onDestroy();
         bleManager.stopScan ();
     }
+
+
+    public void requestPermission(){
+        permissonItems.add(new PermissionItem(Manifest.permission.WRITE_EXTERNAL_STORAGE,getString (R.string.file),R.drawable.permission_ic_storage));
+        permissonItems.add(new PermissionItem(android.Manifest.permission.ACCESS_FINE_LOCATION,getString (R.string.location),R.drawable.permission_ic_location));
+        HiPermission.create(getActivity())
+                .permissions(permissonItems)
+                .title(getString (R.string.permission_needed))
+                .checkMutiPermission(new PermissionCallback() {
+                    @Override
+                    public void onClose() {
+                        Log.d(TAG,"用户关闭权限申请");
+                    }
+                    @Override
+                    public void onFinish() {
+                        Log.d(TAG,"所有权限申请完成");
+                        bleManager.startScan();
+                    }
+                    @Override
+                    public void onDeny(String permisson, int position) {
+                        Log.d(TAG, "onDeny");
+                        getActivity().finish();
+                    }
+                    @Override
+                    public void onGuarantee(String permisson, int position) {
+                        Log.d(TAG, "onGuarantee");
+                    }
+                });
+    }
+
 
 }
