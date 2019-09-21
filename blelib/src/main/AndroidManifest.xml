@@ -2,9 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.xiaojin20135.blelib">
 
-    <application>
-        <activity android:name=".activity.ScanListActivity"></activity>
-    </application> <!-- 下面的用来扫描设备和修改设置，用了这个必须同时用上面那个 -->
+    <application></application> <!-- 下面的用来扫描设备和修改设置，用了这个必须同时用上面那个 -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
