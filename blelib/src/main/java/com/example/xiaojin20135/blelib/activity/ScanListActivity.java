@@ -43,6 +43,7 @@ public class ScanListActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        bleManager.startScan();
     }
 
     @Override
@@ -62,7 +63,6 @@ public class ScanListActivity extends BaseActivity {
         recycler.setAdapter(bleDeviceAdapter);
         swipe_refresh.setColorSchemeResources(R.color.colorPrimary,R.color.colorAccent,R.color.colorPrimaryDark);
         swipe_refresh.setProgressViewOffset(false,0,(int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
-
     }
 
     @Override
