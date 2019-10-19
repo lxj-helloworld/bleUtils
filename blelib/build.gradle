@@ -25,8 +25,8 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    api 'com.android.support:appcompat-v7:25.+'
-    api 'com.android.support:recyclerview-v7:25.+'
+    api 'com.android.support:appcompat-v7:27.+'
+    api 'com.android.support:recyclerview-v7:27.+'
     api('com.github.lxj-helloworld:basePro:1.11.53')
 
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
