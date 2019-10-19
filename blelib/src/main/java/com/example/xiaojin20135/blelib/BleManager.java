@@ -553,12 +553,12 @@ public enum BleManager {
 //                        Log.d(TAG,"k+1 = " + (k+1) + " ; (from + k) = " + (from + k));
                         frame[k+1]=datas[from+k];
                     }else{
-                        frame[k+1]=0x55;
+//                        frame[k+1]=0x55;
                         break;
                     }
                 }
                 if(k == FRAME_LENGTH){
-                    frame[k+1]=0x55;
+//                    frame[k+1]=0x55;
                 }
                 from=from+FRAME_LENGTH;
 //                Log.d(TAG,"frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
