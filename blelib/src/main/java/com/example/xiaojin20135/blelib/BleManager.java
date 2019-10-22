@@ -537,7 +537,7 @@ public enum BleManager {
             int from = 0;
             for(int i=0;i<count;i++){
                 //帧
-                byte[] frame = new byte[FRAME_LENGTH+2];
+                byte[] frame = new byte[FRAME_LENGTH+1];
                 int length=0;
                 length=sylen;
                 if((sylen/(FRAME_LENGTH+1))<1){
@@ -561,7 +561,7 @@ public enum BleManager {
 //                    frame[k+1]=0x55;
                 }
                 from=from+FRAME_LENGTH;
-//                Log.d(TAG,"frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
+                Log.d(TAG,"frame = " + MethodsUtil.METHODS_UTIL.byteToHexString(frame));
                 datasBuffer.addToSend(frame);
             }
         }else{
