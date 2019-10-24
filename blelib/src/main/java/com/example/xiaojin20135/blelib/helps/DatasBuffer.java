@@ -57,17 +57,19 @@ public enum DatasBuffer {
         //判断第一个字节是否是结束帧，如果是，组织一个完整的报文
         if(((firstByte & 0xFF) & 0x80) == 0x80){
             //复制数组，不包含第一个元素
-            byte[] resultArr = Arrays.copyOfRange(frameBuffer.get(0),1,frame.length);
+            byte[] resultArr = Arrays.copyOfRange(frameBuffer.get(0),1,frameBuffer.get(0).length);
             Log.d(TAG,"resultArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(resultArr));
             for(int i=1;i<frameBuffer.size();i++){
-                byte[] tempArr = Arrays.copyOfRange(frameBuffer.get(i),1,frame.length);
+                byte[] tempArr = Arrays.copyOfRange(frameBuffer.get(i),1,frameBuffer.get(i).length);
                 resultArr = Arrays.copyOf(resultArr,resultArr.length + tempArr.length);
                 System.arraycopy(tempArr,0,resultArr,resultArr.length - tempArr.length,tempArr.length);
+                Log.d(TAG,"resultArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(resultArr));
             }
             frameReceivedLis.receive(resultArr);
             frameBuffer.clear();
         }
     }
+
     /**
      * 清理当前需要发送的报文
      */
