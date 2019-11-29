@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -20,6 +21,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/name_TV"
                 android:text="name"
+                android:textColor="#36ab60"
                 android:textStyle="bold">
             </TextView>
             <TextView
@@ -35,9 +37,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
             android:id="@+id/rssi_TV"
             android:text="-0"
+            android:textColor="#e98f36"
+            android:layout_gravity="center_vertical"
             android:textStyle="bold"
             >
         </TextView>
@@ -49,5 +53,5 @@
         android:layout_margin="@dimen/info_margin_5"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/actionsheet_gray"/>
+        android:background="#e6e6e6"/>
 </LinearLayout>
