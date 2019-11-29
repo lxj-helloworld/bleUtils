@@ -48,6 +48,7 @@ public abstract class BaseBleFragment extends BaseFragment {
     * description: 发送
     */
     public void send(byte[] frame){
+        showProgress();
         BleManager.BLE_MANAGER.sendSliceData(frame,frameReceivedLis);
     }
 
@@ -69,6 +70,7 @@ public abstract class BaseBleFragment extends BaseFragment {
                    .subscribe(new Consumer<byte[]>() {
                        @Override
                        public void accept(byte[] bytes) throws Exception {
+                           dismissProgress();
                            receiveFrame(bytes);
                        }
                    });

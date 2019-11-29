@@ -58,12 +58,12 @@ public enum DatasBuffer {
         if(((firstByte & 0xFF) & 0x80) == 0x80){
             //复制数组，不包含第一个元素
             byte[] resultArr = Arrays.copyOfRange(frameBuffer.get(0),1,frameBuffer.get(0).length);
-            Log.d(TAG,"resultArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(resultArr));
+            Log.d(TAG,"第0次拼接 resultArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(resultArr));
             for(int i=1;i<frameBuffer.size();i++){
                 byte[] tempArr = Arrays.copyOfRange(frameBuffer.get(i),1,frameBuffer.get(i).length);
                 resultArr = Arrays.copyOf(resultArr,resultArr.length + tempArr.length);
                 System.arraycopy(tempArr,0,resultArr,resultArr.length - tempArr.length,tempArr.length);
-                Log.d(TAG,"resultArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(resultArr));
+                Log.d(TAG,"第"+i+"次拼接 resultArr = " + MethodsUtil.METHODS_UTIL.byteToHexString(resultArr));
             }
             frameReceivedLis.receive(resultArr);
             frameBuffer.clear();

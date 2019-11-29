@@ -465,27 +465,27 @@ public enum BleManager {
         }
         gattService = mBluetoothGatt.getService(UUID_SERVICE);
 //        //得到写特征字
-        mWriteCharacteristic = gattService.getCharacteristic(UUID_WRITE);
+            mWriteCharacteristic = gattService.getCharacteristic(UUID_WRITE);
 //        mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
-        if(mWriteCharacteristic != null && datas != null){
-            mWriteCharacteristic.setValue(datas);
-            mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-            if(mBluetoothGatt !=  null){
-                sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
-            }
-            //设置当前分帧发送成功以及失败标识，
-            // 如果发送成功，在onCharacteristicWrite回调成功后，开始发送下一帧，
-            //如果发送失败，即使收到onCharacteristicWrite回到成功，也不继续发送下一帧，等待发送失败的再次发送
-            sendSuccess  = sendResult;
-            if(sendResult){
-                Log.d(TAG,"in sendData1 . 发送成功:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
-                sendHandlerStatus(SEND_SUCCESS,MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+            if(mWriteCharacteristic != null && datas != null){
+                mWriteCharacteristic.setValue(datas);
+                mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+                if(mBluetoothGatt !=  null){
+                    sendResult = mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
+                }
+                //设置当前分帧发送成功以及失败标识，
+                // 如果发送成功，在onCharacteristicWrite回调成功后，开始发送下一帧，
+                //如果发送失败，即使收到onCharacteristicWrite回到成功，也不继续发送下一帧，等待发送失败的再次发送
+                sendSuccess  = sendResult;
+                if(sendResult){
+                    Log.d(TAG,"in sendData1 . 发送成功:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+                    sendHandlerStatus(SEND_SUCCESS,MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+                }else{
+                    Log.d(TAG,"in sendData1 . 发送失败:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
+                    //发送失败，重新发送
+                    sendHandlerStatus(SENDFAILED_TRY,"");
+                }
             }else{
-                Log.d(TAG,"in sendData1 . 发送失败:" + MethodsUtil.METHODS_UTIL.byteToHexString(datas));
-                //发送失败，重新发送
-                sendHandlerStatus(SENDFAILED_TRY,"");
-            }
-        }else{
             Log.d(TAG,"mWriteCharacteristic is null or datas is null.");
         }
         return sendResult;
