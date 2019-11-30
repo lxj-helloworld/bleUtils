@@ -31,10 +31,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import static com.example.xiaojin20135.blelib.helps.BleConstant.FRAME_LENGTH;
 import static com.example.xiaojin20135.blelib.helps.BleConstant.SCANNEWDEVICE;
 import static com.example.xiaojin20135.blelib.helps.BleConstant.SENDFAILED_TRY;
 import static com.example.xiaojin20135.blelib.helps.BleConstant.SEND_SUCCESS;
 import static com.example.xiaojin20135.blelib.helps.BleConstant.STARTCONNECT;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.encryptEnable;
 
 
 /**
@@ -350,7 +352,9 @@ public enum BleManager {
                             Log.d(TAG,"setResult = " + setResult);
                             if(setResult){
                                 Log.d(TAG, "Enable 通知成功！");
-
+                                if(!encryptEnable){ //如果禁用加密认证，直接跳转
+                                    sendStateChange(BleConstant.CONNECTDONE,"");
+                                }
                             }else{
                                 Log.d(TAG, "Enable 通知失败");
                             }
@@ -499,10 +503,6 @@ public enum BleManager {
         Log.d(TAG,"sendTry 发送失败，重新发送:" + MethodsUtil.METHODS_UTIL.byteToHexString(currentFrame));
         return sendData(currentFrame);
     }
-
-
-
-    private static int FRAME_LENGTH = 200;
 
     public boolean sendSliceData(byte[] datas,FrameReceivedLis frameReceivedLis){
         datasBuffer.setFrameReceivedLis(frameReceivedLis);

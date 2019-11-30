@@ -5,5 +5,5 @@ package com.example.xiaojin20135.blelib;
  */
 
 public interface FrameReceivedLis {
-    public void receive(byte[] frame);
+    void receive(byte[] frame);
 }

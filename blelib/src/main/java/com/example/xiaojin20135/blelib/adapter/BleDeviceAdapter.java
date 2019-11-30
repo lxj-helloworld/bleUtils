@@ -76,7 +76,7 @@ public class BleDeviceAdapter extends RecyclerView.Adapter implements View.OnCli
 
     @Override
     public void onClick(View v) {
-        Toast.makeText(activity,"正在连接，请稍等...",Toast.LENGTH_SHORT).show();
+//        Toast.makeText(activity,"正在连接，请稍等...",Toast.LENGTH_SHORT).show();
         //获取点击位置索引
         int position = recyclerView.getChildAdapterPosition(v);
         Log.d(TAG,"position = " + position);

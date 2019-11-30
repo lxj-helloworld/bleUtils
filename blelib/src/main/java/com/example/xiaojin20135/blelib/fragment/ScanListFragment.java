@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.print.PrinterId;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -26,26 +27,41 @@ import com.example.xiaojin20135.blelib.helps.BleConstant;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
 import me.weyye.hipermission.HiPermission;
 import me.weyye.hipermission.PermissionCallback;
 import me.weyye.hipermission.PermissionItem;
+
+import static com.example.xiaojin20135.blelib.helps.BleConstant.UUID_CONFIRM;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.UUID_NOTIFICATION;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.UUID_NOTIFICATION_DES2;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.UUID_SERVICE;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.UUID_WRITE;
+import static com.example.xiaojin20135.blelib.helps.BleConstant.scanPersisTime;
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class ScanListFragment extends BaseFragment {
+    private static final String TAG = "ScanListFragment";
     private SwipeRefreshLayout swipe_refresh;
     private RecyclerView recycler;
     private LinearLayoutManager linearLayoutManager;
     private List<MyBluetoothDevice> datas = new ArrayList<>();
     private BleDeviceAdapter bleDeviceAdapter;
     private BleManager bleManager = BleManager.BLE_MANAGER;
-    private String uuid_service = "0000fff0-0000-1000-8000-00805f9b34fb";
-    private String uuid_write = "0000fff6-0000-1000-8000-00805f9b34fb";
-    private String uuid_notification = "0000fff4-0000-1000-8000-00805f9b34fb";
-    private String uuid_confirm = "0000fff3-0000-1000-8000-00805f9b34fb";
-    private String uuid_notification_des2 = "00002902-0000-1000-8000-00805f9b34fb";
+
+
+
+    private String uuid_service;
+    private String uuid_write;
+    private String uuid_notification;
+    private String uuid_confirm;
+    private String uuid_notification_des2;
     private Handler handler; //扫描到新设备通知
     //连接成功后跳转到的Activity
     private String className = "";
@@ -60,13 +76,33 @@ public class ScanListFragment extends BaseFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
+        prepareParas();
         View view = inflater.inflate(R.layout.fragment_scan_list, container, false);
         initView(view);
         initEvents(view);
         className = getArguments().getString("className");
         requestPermission();
         return view;
+    }
+
+    /*
+    * @author lixiaojin
+    * create on 2019-11-30 10:52
+    * description: 参数准备
+    */
+    private void prepareParas(){
+        uuid_service = getArguments().getString("uuid_service",UUID_SERVICE);
+        uuid_write = getArguments().getString("uuid_write",UUID_WRITE);
+        uuid_notification = getArguments().getString("uuid_notification",UUID_NOTIFICATION);
+        uuid_confirm = getArguments().getString("uuid_confirm",UUID_CONFIRM);
+        uuid_notification_des2 = getArguments().getString("uuid_notification_des2",UUID_NOTIFICATION_DES2);
+        Log.d(TAG,"**********初始化蓝牙连接参数***********");
+        Log.d(TAG,"uuid_service = " + uuid_service);
+        Log.d(TAG,"uuid_write = " + uuid_write);
+        Log.d(TAG,"uuid_notification = " + uuid_notification);
+        Log.d(TAG,"uuid_confirm = " + uuid_confirm);
+        Log.d(TAG,"uuid_notification_des2 = " + uuid_notification_des2);
+        Log.d(TAG,"**********初始化蓝牙连接参数***********");
     }
 
     @Override
@@ -89,14 +125,36 @@ public class ScanListFragment extends BaseFragment {
         swipe_refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                bleDeviceAdapter.clearAll();
-                bleDeviceAdapter.notifyDataSetChanged();
-                swipe_refresh.setRefreshing(false);
-                bleManager.startScan();
-                Log.d(TAG,"清理数据，重新扫描");
+                startScan();
             }
         });
     }
+
+
+    /*
+    * @author lixiaojin
+    * create on 2019-11-30 11:34
+    * description: 开始扫描
+    */
+    private void startScan(){
+        //开始扫描
+        bleDeviceAdapter.clearAll();
+        bleDeviceAdapter.notifyDataSetChanged();
+        swipe_refresh.setRefreshing(false);
+        bleManager.startScan();
+        Log.d(TAG,"清理数据，重新扫描");
+        //设置定时器
+        Observable.timer(scanPersisTime, TimeUnit.SECONDS)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Long>() {
+                    @Override
+                    public void accept(Long aLong) throws Exception {
+                        Log.d(TAG,scanPersisTime + "秒之后停止扫描");
+                        bleManager.stopScan();
+                    }
+                });
+    }
+
 
     private void initHandler(){
         ///扫描到新设备
@@ -115,27 +173,24 @@ public class ScanListFragment extends BaseFragment {
                     bleDeviceAdapter.notifyDataSetChanged();
                 }else if(msg.what == BleConstant.STARTCONNECT){
                     Log.d(TAG,"开始连接");
-                    Toast.makeText(getActivity(),"开始连接",Toast.LENGTH_SHORT).show();
+                    showProgress();
+//                    Toast.makeText(getActivity(),"开始连接",Toast.LENGTH_SHORT).show();
                 }else if(msg.what == BleConstant.CONNECTED){
                     Log.d(TAG,"连接成功，加密认证中...");
-                    Toast.makeText(getActivity(),"连接成功，加密认证中...",Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getActivity(),"连接成功，加密认证中...",Toast.LENGTH_SHORT).show();
                     bleManager.stopScan ();
                 }else if(msg.what == BleConstant.CONNECTDONE){
                     Log.d(TAG,"认证完成，可跳转");
-                    Toast.makeText(getActivity(),"加密认证完成",Toast.LENGTH_SHORT).show();
-
+                    dismissProgress();
+//                    Toast.makeText(getActivity(),"加密认证完成",Toast.LENGTH_SHORT).show();
                     try {
                         Log.d(TAG,"className = " + className);
                         Class<?> activityName = Class.forName(className);
-
                         Intent intent = new Intent(getActivity(),activityName);
                         startActivity(intent);
                     }catch (Exception e){
                         Log.d(TAG,"跳转失败");
                     }
-
-
-
                 }else{
                     Log.d(TAG,"连接状态发生变化； state = " + msg.what);
                 }
@@ -143,6 +198,17 @@ public class ScanListFragment extends BaseFragment {
         };
         bleManager.setBleHandler(handler);
     }
+
+
+    /*
+    * @author lixiaojin
+    * create on 2019-11-30 11:52
+    * description: 连接成功，跳转到指定页面
+    */
+    private void connectDone(){
+
+    }
+
 
 
     @Override
@@ -166,7 +232,7 @@ public class ScanListFragment extends BaseFragment {
                     @Override
                     public void onFinish() {
                         Log.d(TAG,"所有权限申请完成");
-                        bleManager.startScan();
+                        startScan();
                     }
                     @Override
                     public void onDeny(String permisson, int position) {
